@@ -1,0 +1,45 @@
+--Dataset: China vs Japan from kaggle
+--CSV file source: https://www.kaggle.com/datasets/waqi786/china-vs-japan
+--Queried using: Microsoft SQL Server
+
+
+-- Adding a column for some extra analysis with country's population for the given year. If no census took place for the specific year then the previous population is being taken to account.
+
+ALTER TABLE dbo.tech
+ADD Population INT;
+
+UPDATE tech 
+SET Population = CASE 
+       WHEN Year BETWEEN 2000 AND 2004 THEN 127027789
+		   WHEN Year BETWEEN 2005 AND 2009 THEN 127913330
+		   WHEN Year BETWEEN 2010 AND 2014 THEN 128185275
+		   WHEN Year BETWEEN 2015 AND 2019 THEN 127275872
+		   WHEN Year BETWEEN 2020 AND 2021 THEN 126304543
+		   WHEN Year = 2022 THEN 124997578
+		   WHEN Year = 2023 THEN 124370947
+		   WHEN Year = 2024 THEN 123753041
+       END
+FROM tech
+WHERE Country = 'Japan'
+
+UPDATE tech 
+SET Population = CASE 
+           WHEN Year BETWEEN 2000 AND 2004 THEN 1269581175
+		   WHEN Year BETWEEN 2005 AND 2009 THEN 1310027136
+		   WHEN Year BETWEEN 2010 AND 2014 THEN 1351561514
+		   WHEN Year BETWEEN 2015 AND 2019 THEN 1396134174
+		   WHEN Year BETWEEN 2020 AND 2021 THEN 1426106093
+		   WHEN Year = 2022 THEN 1425179569
+		   WHEN Year = 2023 THEN 1422584933
+		   WHEN Year = 2024 THEN 1419321278
+       END
+FROM tech
+WHERE Country = 'China'
+
+
+-- What is the total number of tech workers in both countries for all tech sectors in each year 
+SELECT Country, Year ,SUM([Number of Tech Workers]) AS 'Number of Tech Workers - All Sectors' from dbo.tech
+GROUP BY Year, Country
+ORDER BY Year DESC;
+
+--Total number of patents filed
