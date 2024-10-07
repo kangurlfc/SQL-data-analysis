@@ -3,7 +3,7 @@
 --Queried using: Microsoft SQL Server
 
 
--- Adding a column for some extra analysis with country's population for the given year. If no census took place for the specific year then the previous population is being taken to account.
+-- Adding a column for some extra analysis with country's population for the given year (source: worldometers.info). If no census took place for the specific year then the previous population is being taken to account.
 
 ALTER TABLE dbo.tech
 ADD Population INT;
@@ -20,7 +20,7 @@ SET Population = CASE
 		   WHEN Year = 2024 THEN 123753041
        END
 FROM tech
-WHERE Country = 'Japan'
+WHERE Country = 'Japan';
 
 UPDATE tech 
 SET Population = CASE 
@@ -34,12 +34,76 @@ SET Population = CASE
 		   WHEN Year = 2024 THEN 1419321278
        END
 FROM tech
-WHERE Country = 'China'
+WHERE Country = 'China';
 
+--Global innovation ranking year by year
+SELECT 
+	Country, 
+	Year, 
+	AVG([Global Innovation Ranking]) AS 'Average Annual Global Innovation Ranking' 
+FROM dbo.tech
+GROUP BY Country, Year
+ORDER BY Year;
 
--- What is the total number of tech workers in both countries for all tech sectors in each year 
-SELECT Country, Year ,SUM([Number of Tech Workers]) AS 'Number of Tech Workers - All Sectors' from dbo.tech
-GROUP BY Year, Country
-ORDER BY Year DESC;
+--Top 10 Tech Products Exported (in USD)
+
+SELECT 
+TOP 10
+	Country,
+	Year,
+	[Tech Sector],
+	[Top Tech Products Exported],
+	[Tech Exports (in USD)],
+	[Market Share (%)]
+FROM tech
+ORDER BY [Tech Exports (in USD)] DESC;
 
 --Total number of patents filed
+SELECT 
+	Country, 
+	SUM([Number of Patents Filed (Annual)]) AS 'Total patents filed' 
+FROM dbo.tech
+GROUP BY Country
+ORDER BY [Total patents filed] DESC;
+
+
+-- What is the total number of tech workers in both countries for all tech sectors in each year and what's the ratio to that year's population.
+SELECT 
+	Country, 
+	Year , 
+	Population, 
+	SUM([Number of Tech Workers]) AS 'Number of Tech Workers - All Sectors', 
+	ROUND((SUM([Number of Tech Workers]) / CAST(Population AS float))*100,2) AS 'Tech Workers/Population ratio [%]' 
+FROM dbo.tech
+GROUP BY Year, Country, Population
+ORDER BY Year DESC;
+
+-- Show years where number of tech companies were over 500 and what percantage of it where start ups
+
+CREATE VIEW over500_CTE AS (
+SELECT Country, Year, [Tech Sector], [Number of Tech Companies], [Number of Startups]
+FROM tech
+WHERE [Number of Tech Companies] > 500
+)
+
+SELECT *, 
+ROUND(([Number of Startups]/CAST([Number of Tech Companies] AS float)*100),2) AS 'Startups/Number of Tech Companies ratio (%)'
+FROM over500_CTE
+ORDER BY Year;
+
+
+--Most profitable tech sectors (in USD)
+
+SELECT 
+	Country, 
+	[Tech Sector], 
+	SUM([Tech Exports (in USD)]) AS 'Total Exports (In USD)',
+	SUM([R&D Investment (in USD)]) AS 'Total R&D Investment in sector',
+	(SUM([Tech Exports (in USD)]) - SUM([R&D Investment (in USD)])) AS 'Export - R&D Investment'
+FROM tech
+GROUP BY [Tech Sector], Country
+ORDER BY 'Export - R&D Investment' DESC
+
+
+
+
